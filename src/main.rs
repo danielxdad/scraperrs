@@ -133,14 +133,15 @@ async fn scrap_url(url: &String, timeout: usize, retries_on_timeout: usize) ->  
     assert!(retries_on_timeout > 0);
 
     for _ in 0..retries_on_timeout {
-        let future = client
+        let response = client
             .get(url)
             .header("User-Agent", "Mozilla 5.0")
             .timeout(Duration::from_secs(timeout as u64))
-            .send();
+            .send()
+            .await?;
         
-        match future.await {
-            Ok(response) => return Ok(response.text().await.unwrap()),
+        match response.text().await {
+            Ok(body) => return Ok(body),
             Err(err) if err.is_timeout() => continue,
             Err(err) => return Err(Box::new(err))
         }
